@@ -1,0 +1,11 @@
+services:
+  web:
+    build:
+      context: .
+    image: mebtasarlagelistir/web:latest
+    container_name: mebtasarlagelistir-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+

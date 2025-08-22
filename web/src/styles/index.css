@@ -1,0 +1,77 @@
+:root {
+  --gold-600: #d9a441;
+  --gold-700: #c7932b;
+  --teal-900: #0a2b2e;
+  --teal-800: #0f3a3e;
+  --teal-700: #14484d;
+  --sky-100: #e6f1f4;
+  --text: #ffffff;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Segoe UI Emoji";
+  color: var(--text);
+  background: linear-gradient(180deg, var(--teal-900) 0%, var(--teal-800) 60%, var(--teal-700) 100%);
+}
+
+a { color: inherit; text-decoration: none; }
+ul { margin: 0; padding: 0; list-style: none; }
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.brand {
+  color: var(--gold-600);
+}
+
+.btn-primary {
+  background: var(--gold-600);
+  color: #1b1b1b;
+  padding: 10px 16px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.section {
+  padding: 56px 0;
+}
+
+.card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+}
+
+header.site-header {
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(8px);
+  background: rgba(10, 43, 46, 0.75);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  z-index: 50;
+}
+
+footer.site-footer {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  background: rgba(10, 43, 46, 0.75);
+  padding: 24px 0;
+}
+
+
