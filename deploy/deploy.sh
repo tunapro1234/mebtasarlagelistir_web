@@ -40,11 +40,13 @@ fi
 # 4. Deploy dizinini oluştur ve repo'yu çek
 echo -e "${YELLOW}[4/8] Kod çekiliyor...${NC}"
 if [ -d "$DEPLOY_DIR" ]; then
+    # Git safe directory ekle
+    git config --global --add safe.directory $DEPLOY_DIR
     cd $DEPLOY_DIR
     git pull origin stable
 else
     sudo mkdir -p $DEPLOY_DIR
-    sudo chown $USER:$USER $DEPLOY_DIR
+    sudo chown -R $USER:$USER $DEPLOY_DIR
     git clone -b stable $REPO_URL $DEPLOY_DIR
     cd $DEPLOY_DIR
 fi
@@ -52,14 +54,43 @@ fi
 # 5. Dependencies kurulumu ve build
 echo -e "${YELLOW}[5/8] Dependencies kuruluyor ve build alınıyor...${NC}"
 cd $DEPLOY_DIR/web
-npm ci
+
+# Permission sorunlarını çöz
+sudo chown -R $USER:$USER $DEPLOY_DIR
+rm -rf node_modules package-lock.json
+
+# Dependencies kur ve build al
+npm install
 npm run build
 
-# 6. Nginx konfigürasyonu
+# Build dizininin yetkilerini ayarla
+sudo chown -R www-data:www-data $DEPLOY_DIR/web/dist
+
+# 6. İlk basit Nginx konfigürasyonu (SSL'siz)
 echo -e "${YELLOW}[6/8] Nginx konfigürasyonu...${NC}"
-sudo cp $DEPLOY_DIR/deploy/nginx.conf $NGINX_SITE
+cat << 'EOF' | sudo tee $NGINX_SITE
+server {
+    listen 80;
+    server_name mebtasarlagelistir.com www.mebtasarlagelistir.com;
+    
+    root /var/www/mebtasarlagelistir/web/dist;
+    index index.html;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+EOF
+
+# Nginx config'i etkinleştir
 sudo ln -sf $NGINX_SITE /etc/nginx/sites-enabled/
-sudo nginx -t
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
 
 # 7. SSL sertifikası (Let's Encrypt)
 echo -e "${YELLOW}[7/8] SSL sertifikası alınıyor...${NC}"
@@ -67,15 +98,8 @@ if ! command -v certbot &> /dev/null; then
     sudo apt install -y certbot python3-certbot-nginx
 fi
 
-# İlk kurulumda SSL'siz başlat
-sudo sed -i '/listen 443/,/^}/d' $NGINX_SITE  # HTTPS bloğunu geçici kaldır
-sudo systemctl reload nginx
-
 # SSL sertifikası al
-sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email mebtasarlagelistir@gmail.com
-
-# Nginx config'i geri yükle
-sudo cp $DEPLOY_DIR/deploy/nginx.conf $NGINX_SITE
+sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email mebtasarlagelistir@gmail.com --redirect
 
 # 8. Nginx'i yeniden başlat
 echo -e "${YELLOW}[8/8] Nginx yeniden başlatılıyor...${NC}"
